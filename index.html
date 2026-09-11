@@ -71,16 +71,11 @@
 
     function renderizarAbas() {
         const container = document.getElementById('containerAbas');
-        
-        // 🌟 CORREÇÃO MESTRE: Organiza os botões lendo o formato correto de lista [id, nome]
-        let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => {
-            return a[1].localeCompare(b[1]);
-        });
-        
+        let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => a.localeCompare(b));
         let html = `<button class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos')">🏠 Ver Todo o Catálogo</button>`;
         
         botoesOrdenados.forEach(b => {
-            html += `<button class="tab-btn ${abaAtiva === b[0] ? 'active' : ''}" onclick="mudarAba('${b[0]}')">${b[1]}</button>`;
+            html += `<button class="tab-btn ${abaAtiva === b ? 'active' : ''}" onclick="mudarAba('${b}')">${b}</button>`;
         });
         container.innerHTML = html;
     }
@@ -120,14 +115,18 @@
             let msg = encodeURIComponent(`Olá! Gostei do produto '${item.nome}' no catálogo Mania de Geek e gostaria de fazer um orçamento!`);
             let linkWa = `https://whatsapp.com{NUMERO_WHATSAPP}&text=${msg}`;
             
+            // 🌟 LIMPEZA DA URL: Remove qualquer otimização do Cloudinary que possa quebrar o link
+            let linkFotoTratado = item.foto.replace("/f_auto,q_auto,w_500/", "/");
+
             htmlCards += `
             <div class="card">
                 <div>
-                    <img src="${item.foto}" style="width:100%; height:200px; object-fit:cover; border-radius:6px;">
+                    <img src="${linkFotoTratado}" style="width:100%; height:200px; object-fit:cover; border-radius:6px;" onerror="this.src='https://placeholder.com'">
                     <h3 style="font-weight:bold; color:#58a6ff; font-size:16px; margin:10px 0 5px 0;">${item.nome}</h3>
                     <p style="color:#8b949e; font-size:12px; margin:0;">Seção: ${item.cat_bruta}</p>
                 </div>
-                <a href="${linkWa}" target="_blank" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
+                <!-- 🌟 BLINDADO: Removido totalmente o target="_blank" para o celular abrir o Whats direto -->
+                <a href="${linkWa}" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
             </div>`;
         });
 
