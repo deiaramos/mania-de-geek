@@ -20,7 +20,7 @@
         .home-btn:hover { background-color: var(--accent); border-color: var(--accent); color: #0d1117; }
 
         .tabs-container { display: flex; gap: 6px; margin-bottom: 15px; background-color: var(--bg-nav); padding: 12px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; }
-        .tab-btn { background-color: #21262d; border: 1px solid var(--border); color: #c9d1d9; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; border: 1px solid var(--border); }
+        .tab-btn { background-color: #21262d; border: 1px solid var(--border); color: #c9d1d9; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
         .tab-btn:hover { background-color: var(--border); color: #fff; }
         .tab-btn.active { background-color: var(--accent); color: #0d1117; border-color: var(--accent); }
 
@@ -47,13 +47,8 @@
         </div>
     </div>
 
-    <!-- ABAS DINÂMICAS -->
     <div class="tabs-container" id="containerAbas"></div>
-
-    <!-- VITRINE DE PRODUTOS -->
     <div class="grid-container" id="containerGrid"></div>
-
-    <!-- BOTÃO CARREGAR MAIS -->
     <div class="load-more-container" id="containerCarregarMais"></div>
 
 <script>
@@ -63,7 +58,6 @@
     let termoBusca = "";
     let limiteExibicao = 60;
 
-    // Carrega o arquivo JSON de forma automática e assíncrona
     async function iniciarCatalogo() {
         try {
             const resposta = await fetch('dados_catalogo.json');
@@ -72,35 +66,31 @@
             renderizarAbas();
             filtrarERenderizarProdutos();
             
-            // Configura o evento de busca em tempo real (sem precisar dar enter!)
+            // 🌟 CORRIGIDO: Removido o .strip() do Python para evitar loops e quebras no navegador
             document.getElementById('txtBusca').addEventListener('input', function() {
-                termoBusca = this.value.toLowerCase().strip();
-                limiteExibicao = 60; // Reseta o limite na busca
+                termoBusca = this.value.toLowerCase().trim();
+                limiteExibicao = 60; 
                 filtrarERenderizarProdutos();
             });
         } catch (e) {
-            document.getElementById('containerGrid').innerHTML = `<h2>Erro ao carregar os dados: ${e}</h2>`;
+            document.getElementById('containerGrid').innerHTML = `<h2>Erro ao carregar dados: ${e}</h2>`;
         }
     }
 
     function renderizarAbas() {
         const container = document.getElementById('containerAbas');
-        
-        // Organiza as abas por ordem alfabética perfeita de A-Z
-        let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => a[1].localeCompare(b[1]));
-        
+        let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => a.localeCompare(b));
         let html = `<button class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos')">🏠 Ver Todo o Catálogo</button>`;
         
         botoesOrdenados.forEach(b => {
-            html += `<button class="tab-btn ${abaAtiva === b[0] ? 'active' : ''}" onclick="mudarAba('${b[0]}')">${b[1]}</button>`;
+            html += `<button class="tab-btn ${abaAtiva === b ? 'active' : ''}" onclick="mudarAba('${b[0]}')">${b[1]}</button>`;
         });
-        
         container.innerHTML = html;
     }
 
     function mudarAba(idAba) {
         abaAtiva = idAba;
-        limiteExibicao = 60; // Reseta a paginação ao mudar de categoria
+        limiteExibicao = 60; 
         renderizarAbas();
         filtrarERenderizarProdutos();
     }
@@ -124,14 +114,14 @@
 
         document.getElementById('badgeTotal').innerText = `🛒 Itens: ${modelosFiltrados.length}`;
 
-        // Pagina os resultados na tela
         let itensParaExibir = modelosFiltrados.slice(0, limiteExibicao);
-        
         let htmlCards = "";
+        
         itensParaExibir.forEach(item => {
-            let msg = encodeURIComponent(`Olá! Gostei muito do produto '${item.nome}' no catálogo Mania de Geek e gostaria de fazer um orçamento!`);
+            let msg = encodeURIComponent(`Olá! Gostei do produto '${item.nome}' no catálogo Mania de Geek e gostaria de fazer um orçamento!`);
             let linkWa = `https://whatsapp.com{NUMERO_WHATSAPP}&text=${msg}`;
             
+            // 🌟 CORRIGIDO: Removido target="_blank" para abrir de forma nativa e segura sem bloqueios de pop-up
             htmlCards += `
             <div class="card">
                 <div>
@@ -139,7 +129,7 @@
                     <h3 style="font-weight:bold; color:#58a6ff; font-size:16px; margin:10px 0 5px 0;">${item.nome}</h3>
                     <p style="color:#8b949e; font-size:12px; margin:0;">Seção: ${item.cat_bruta}</p>
                 </div>
-                <a href="${linkWa}" target="_blank" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
+                <a href="${linkWa}" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
             </div>`;
         });
 
@@ -151,7 +141,6 @@
 
         grid.innerHTML = htmlCards;
 
-        // Renderiza o botão "Carregar Mais" se houver mais itens escondidos
         const containerBotao = document.getElementById('containerCarregarMais');
         if (modelosFiltrados.length > limiteExibicao) {
             containerBotao.innerHTML = `<button class="load-more-btn" onclick="carregarMais(${modelosFiltrados.length})">📥 Carregar Mais Modelos</button>`;
@@ -165,7 +154,6 @@
         filtrarERenderizarProdutos();
     }
 
-    // Inicializa o sistema assim que a página abre
     window.onload = iniciarCatalogo;
 </script>
 </body>
