@@ -18,13 +18,17 @@
         
         .home-btn { background-color: #21262d; border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; text-decoration: none; }
         .tabs-container { display: flex; gap: 6px; margin-bottom: 15px; background-color: var(--bg-nav); padding: 12px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; }
-        .tab-btn { background-color: #21262d; border: 1px solid var(--border); color: #c9d1d9; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .tab-btn { background-color: #21262d; border: 1px solid var(--border); color: #c9d1d9; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; text-decoration: none; }
+        .tab-btn:hover { background-color: var(--border); color: #fff; }
         .tab-btn.active { background-color: var(--accent); color: #0d1117; border-color: var(--accent); }
 
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
         .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+        .card:hover { border-color: var(--accent); }
+        
         .total-badge { background-color: var(--btn-active); color: #ffffff; padding: 4px 10px; border-radius: 12px; font-size: 13px; margin-left: 10px; }
         .open-folder-btn { text-align: center; text-decoration: none; display: block; background-color: #238636; color: #fff; font-weight: bold; padding: 12px; border-radius: 6px; font-size: 14px; margin-top: auto; }
+        .open-folder-btn:hover { background-color: #2ea043; }
         
         .load-more-container { text-align: center; margin: 40px 0; width: 100%; }
         .load-more-btn { display: inline-block; padding: 12px 30px; font-size: 14px; background-color: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; cursor: pointer; font-weight: bold; }
@@ -71,11 +75,20 @@
 
     function renderizarAbas() {
         const container = document.getElementById('containerAbas');
-        let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => a.localeCompare(b));
-        let html = `<button class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos')">🏠 Ver Todo o Catálogo</button>`;
+        
+        // 🌟 CORREÇÃO DEFINITIVA: Ordena comparando o texto do segundo elemento da lista [id, nome]
+        let botoesOrdenados = [...bancoDadosCompleto.botoes].sort((a, b) => {
+            let nomeA = Array.isArray(a) ? a[1] : a;
+            let nomeB = Array.isArray(b) ? b[1] : b;
+            return String(nomeA).localeCompare(String(nomeB));
+        });
+        
+        let html = `<a href="#" class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos'); return false;">🏠 Ver Todo o Catálogo</a>`;
         
         botoesOrdenados.forEach(b => {
-            html += `<button class="tab-btn ${abaAtiva === b ? 'active' : ''}" onclick="mudarAba('${b}')">${b}</button>`;
+            let idBtn = Array.isArray(b) ? b[0] : b;
+            let nomeBtn = Array.isArray(b) ? b[1] : b;
+            html += `<a href="#" class="tab-btn ${abaAtiva === idBtn ? 'active' : ''}" onclick="mudarAba('${idBtn}'); return false;">${nomeBtn}</a>`;
         });
         container.innerHTML = html;
     }
@@ -115,7 +128,7 @@
             let msg = encodeURIComponent(`Olá! Gostei do produto '${item.nome}' no catálogo Mania de Geek e gostaria de fazer um orçamento!`);
             let linkWa = `https://whatsapp.com{NUMERO_WHATSAPP}&text=${msg}`;
             
-            // 🌟 LIMPEZA DA URL: Remove qualquer otimização do Cloudinary que possa quebrar o link
+            // 🌟 LIMPEZA TOTAL DA URL: Remove filtros automáticos que quebram a imagem na conta nova do Cloudinary
             let linkFotoTratado = item.foto.replace("/f_auto,q_auto,w_500/", "/");
 
             htmlCards += `
@@ -125,8 +138,8 @@
                     <h3 style="font-weight:bold; color:#58a6ff; font-size:16px; margin:10px 0 5px 0;">${item.nome}</h3>
                     <p style="color:#8b949e; font-size:12px; margin:0;">Seção: ${item.cat_bruta}</p>
                 </div>
-                <!-- 🌟 BLINDADO: Removido totalmente o target="_blank" para o celular abrir o Whats direto -->
-                <a href="${linkWa}" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
+                <!-- 🌟 LINK SEGURO DO WHATSAPP NATIVO -->
+                <a href="${linkWa}" target="_blank" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
             </div>`;
         });
 
