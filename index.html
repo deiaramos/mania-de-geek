@@ -77,16 +77,26 @@
         }
     }
 
-    function renderizarAbas() {
-        const container = document.getElementById('containerAbas');
-        let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => a.localeCompare(b));
-        let html = `<button class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos')">🏠 Ver Todo o Catálogo</button>`;
-        
-        botoesOrdenados.forEach(b => {
-            html += `<button class="tab-btn ${abaAtiva === b ? 'active' : ''}" onclick="mudarAba('${b[0]}')">${b[1]}</button>`;
-        });
-        container.innerHTML = html;
-    }
+function renderizarAbas() {
+    const container = document.getElementById('containerAbas');
+
+    // Ordenação inteligente ajustada para o seu formato exato de JSON
+    let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => {
+        let nomeA = Array.isArray(a) ? a[1] : (typeof a === 'object' ? a.nome : a);
+        let nomeB = Array.isArray(b) ? b[1] : (typeof b === 'object' ? b.nome : b);
+        return String(nomeA).localeCompare(String(nomeB));
+    });
+
+    let html = `<button class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos')">🏠 Ver Todo o Catálogo</button>`;
+
+    botoesOrdenados.forEach(b => {
+        let idBtn = Array.isArray(b) ? b[0] : (typeof b === 'object' ? b.id : b);
+        let nomeBtn = Array.isArray(b) ? b[1] : (typeof b === 'object' ? b.nome : b);
+        html += `<button class="tab-btn ${abaAtiva === idBtn ? 'active' : ''}" onclick="mudarAba('${idBtn}')">${nomeBtn}</button>`;
+    });
+
+    container.innerHTML = html;
+}
 
     function mudarAba(idAba) {
         abaAtiva = idAba;
