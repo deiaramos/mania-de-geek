@@ -76,16 +76,9 @@
         const container = document.getElementById('containerAbas');
         let listaBotoes = bancoDadosCompleto.botoes || [];
         
-        // 🌟 ORDENAÇÃO DE ABAS AJUSTADA PARA O SEU FORMATO DE LISTA [id, nome]
-        let botoesOrdenados = [...listaBotoes].sort((a, b) => {
-            let nomeA = Array.isArray(a) ? a[1] : a;
-            let nomeB = Array.isArray(b) ? b[1] : b;
-            return String(nomeA).localeCompare(String(nomeB));
-        });
-        
         let html = `<a href="#" class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos'); return false;">🏠 Ver Todo o Catálogo</a>`;
         
-        botoesOrdenados.forEach(b => {
+        listaBotoes.forEach(b => {
             let idBtn = Array.isArray(b) ? b[0] : b;
             let nomeBtn = Array.isArray(b) ? b[1] : b;
             html += `<a href="#" class="tab-btn ${abaAtiva === idBtn ? 'active' : ''}" onclick="mudarAba('${idBtn}'); return false;">${nomeBtn}</a>`;
@@ -128,10 +121,11 @@
             let msg = encodeURIComponent(`Olá! Gostei do produto '${item.nome}' no catálogo Mania de Geek e gostaria de fazer um orçamento!`);
             let linkWa = `https://whatsapp.com{NUMERO_WHATSAPP}&text=${msg}`;
             
-            // 🌟 CORREÇÃO DO LINK QUEBRADO DO GOOGLE DRIVE DO SEU JSON
+            // 🌟 O CONSERTADOR DE LINKS: Pega o texto grudado "gdurl.com1OJa..." e reconstrói o link oficial do Google Drive
             let linkFotoCorreto = item.foto;
             if (linkFotoCorreto.includes("gdurl.com1OJa")) {
-                linkFotoCorreto = linkFotoCorreto.replace("gdurl.com1OJa", "://gdurl.com");
+                let idDrive = linkFotoCorreto.split("gdurl.com1OJa")[1].split("/file")[0];
+                linkFotoCorreto = `https://google.com{idDrive}`;
             }
 
             htmlCards += `
@@ -141,7 +135,7 @@
                     <h3 style="font-weight:bold; color:#58a6ff; font-size:16px; margin:10px 0 5px 0;">${item.nome}</h3>
                     <p style="color:#8b949e; font-size:12px; margin:0;">Seção: ${item.cat_bruta}</p>
                 </div>
-                <!-- 🌟 WHATSAPP NATIVO BLINDADO CONTRA POP-UPS -->
+                <!-- 🌟 WHATSAPP SEM TARGET_BLANK PARA NÃO BLOQUEAR NO CELULAR -->
                 <a href="${linkWa}" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
             </div>`;
         });
