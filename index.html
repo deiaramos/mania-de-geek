@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mania de Geek</title>
+    <style>
+        :root {
+            --bg-body: #0d1117; --bg-nav: #161b22; --bg-card: #161b22;
+            --text-main: #ffffff; --text-sub: #8b949e; --text-title: #f0f6fc;
+            --border: #30363d; --accent: #58a6ff; --btn-active: #238636;
+        }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-nav); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; flex-wrap: wrap; gap: 15px; }
+        .right-actions { display: flex; align-items: center; gap: 15px; }
+        .search-box { background-color: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px 15px; border-radius: 6px; width: 250px; font-size: 14px; outline: none; }
+        .search-box:focus { border-color: var(--accent); }
+        
+        .home-btn { background-color: #21262d; border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; text-decoration: none; }
+        .home-btn:hover { background-color: var(--accent); border-color: var(--accent); color: #0d1117; }
+
+        .tabs-container { display: flex; gap: 6px; margin-bottom: 15px; background-color: var(--bg-nav); padding: 12px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; }
+        .tab-btn { background-color: #21262d; border: 1px solid var(--border); color: #c9d1d9; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; border: 1px solid var(--border); }
+        .tab-btn:hover { background-color: var(--border); color: #fff; }
+        .tab-btn.active { background-color: var(--accent); color: #0d1117; border-color: var(--accent); }
+
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: 0.2s; }
+        .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        
+        .total-badge { background-color: var(--btn-active); color: #ffffff; padding: 4px 10px; border-radius: 12px; font-size: 13px; margin-left: 10px; }
+        .open-folder-btn { text-align: center; text-decoration: none; display: block; background-color: #238636; color: #fff; font-weight: bold; padding: 12px; border-radius: 6px; font-size: 14px; margin-top: auto; }
+        .open-folder-btn:hover { background-color: #2ea043; }
+        
+        .load-more-container { text-align: center; margin: 40px 0; width: 100%; }
+        .load-more-btn { display: inline-block; padding: 12px 30px; font-size: 14px; background-color: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .load-more-btn:hover { border-color: var(--accent); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div>✨ Mania de Geek <span class="total-badge" id="badgeTotal">🛒 Carregando...</span></div>
+        <div class="right-actions">
+            <button class="home-btn" onclick="resetarFiltros()">🏠 Ver Tudo</button>
+            <input type="text" id="txtBusca" class="search-box" placeholder="🔍 Procurar produto...">
+        </div>
+    </div>
+
+    <!-- ABAS DINÂMICAS -->
+    <div class="tabs-container" id="containerAbas"></div>
+
+    <!-- VITRINE DE PRODUTOS -->
+    <div class="grid-container" id="containerGrid"></div>
+
+    <!-- BOTÃO CARREGAR MAIS -->
+    <div class="load-more-container" id="containerCarregarMais"></div>
+
+<script>
+    const NUMERO_WHATSAPP = "5511977088287";
+    let bancoDadosCompleto = { botoes: [], modelos: [] };
+    let abaAtiva = "todos";
+    let termoBusca = "";
+    let limiteExibicao = 60;
+
+    // Carrega o arquivo JSON de forma automática e assíncrona
+    async function iniciarCatalogo() {
+        try {
+            const resposta = await fetch('dados_catalogo.json');
+            bancoDadosCompleto = await reply = await resposta.json();
+            
+            renderizarAbas();
+            filtrarERenderizarProdutos();
+            
+            // Configura o evento de busca em tempo real (sem precisar dar enter!)
+            document.getElementById('txtBusca').addEventListener('input', function() {
+                termoBusca = this.value.toLowerCase().strip();
+                limiteExibicao = 60; // Reseta o limite na busca
+                filtrarERenderizarProdutos();
+            });
+        } catch (e) {
+            document.getElementById('containerGrid').innerHTML = `<h2>Erro ao carregar os dados: ${e}</h2>`;
+        }
+    }
+
+    function renderizarAbas() {
+        const container = document.getElementById('containerAbas');
+        
+        // Organiza as abas por ordem alfabética perfeita de A-Z
+        let botoesOrdenados = bancoDadosCompleto.botoes.sort((a, b) => a[1].localeCompare(b[1]));
+        
+        let html = `<button class="tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="mudarAba('todos')">🏠 Ver Todo o Catálogo</button>`;
+        
+        botoesOrdenados.forEach(b => {
+            html += `<button class="tab-btn ${abaAtiva === b[0] ? 'active' : ''}" onclick="mudarAba('${b[0]}')">${b[1]}</button>`;
+        });
+        
+        container.innerHTML = html;
+    }
+
+    function mudarAba(idAba) {
+        abaAtiva = idAba;
+        limiteExibicao = 60; // Reseta a paginação ao mudar de categoria
+        renderizarAbas();
+        filtrarERenderizarProdutos();
+    }
+
+    function resetarFiltros() {
+        abaAtiva = "todos";
+        termoBusca = "";
+        document.getElementById('txtBusca').value = "";
+        limiteExibicao = 60;
+        renderizarAbas();
+        filtrarERenderizarProdutos();
+    }
+
+    function filtrarERenderizarProdutos() {
+        const grid = document.getElementById('containerGrid');
+        let modelosFiltrados = bancoDadosCompleto.modelos.filter(item => {
+            if (abaAtiva !== 'todos' && item.cat_id !== abaAtiva) return false;
+            if (termoBusca && !item.nome.toLowerCase().includes(termoBusca)) return false;
+            return true;
+        });
+
+        document.getElementById('badgeTotal').innerText = `🛒 Itens: ${modelosFiltrados.length}`;
+
+        // Pagina os resultados na tela
+        let itensParaExibir = modelosFiltrados.slice(0, limiteExibicao);
+        
+        let htmlCards = "";
+        itensParaExibir.forEach(item => {
+            let msg = encodeURIComponent(`Olá! Gostei muito do produto '${item.nome}' no catálogo Mania de Geek e gostaria de fazer um orçamento!`);
+            let linkWa = `https://whatsapp.com{NUMERO_WHATSAPP}&text=${msg}`;
+            
+            htmlCards += `
+            <div class="card">
+                <div>
+                    <img src="${item.foto}" style="width:100%; height:200px; object-fit:cover; border-radius:6px;" onerror="this.src='https://placeholder.com'">
+                    <h3 style="font-weight:bold; color:#58a6ff; font-size:16px; margin:10px 0 5px 0;">${item.nome}</h3>
+                    <p style="color:#8b949e; font-size:12px; margin:0;">Seção: ${item.cat_bruta}</p>
+                </div>
+                <a href="${linkWa}" target="_blank" class="open-folder-btn">💬 Orçamento via WhatsApp</a>
+            </div>`;
+        });
+
+        if (htmlCards === "") {
+            grid.innerHTML = '<div style="text-align:center; width:100%; color:#8b949e; padding:40px;"><h3>🔍 Nenhum item encontrado.</h3></div>';
+            document.getElementById('containerCarregarMais').innerHTML = "";
+            return;
+        }
+
+        grid.innerHTML = htmlCards;
+
+        // Renderiza o botão "Carregar Mais" se houver mais itens escondidos
+        const containerBotao = document.getElementById('containerCarregarMais');
+        if (modelosFiltrados.length > limiteExibicao) {
+            containerBotao.innerHTML = `<button class="load-more-btn" onclick="carregarMais(${modelosFiltrados.length})">📥 Carregar Mais Modelos</button>`;
+        } else {
+            containerBotao.innerHTML = "";
+        }
+    }
+
+    function carregarMais(totalItens) {
+        limiteExibicao += 60;
+        filtrarERenderizarProdutos();
+    }
+
+    // Inicializa o sistema assim que a página abre
+    window.onload = iniciarCatalogo;
+</script>
+</body>
+</html>
