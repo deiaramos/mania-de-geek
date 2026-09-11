@@ -67,7 +67,7 @@
     async function iniciarCatalogo() {
         try {
             const resposta = await fetch('dados_catalogo.json');
-            bancoDadosCompleto = await reply = await resposta.json();
+            bancoDadosCompleto = await resposta.json();
             
             renderizarAbas();
             filtrarERenderizarProdutos();
